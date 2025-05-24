@@ -1,0 +1,2 @@
+Class,AP@0.5,AP@1.0,AP@2.0,AP@4.0
+NuScenes metric/pred,0.0045,0.0045,0.0045,0.0045
