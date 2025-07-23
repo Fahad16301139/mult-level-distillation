@@ -1,4 +1,60 @@
--r requirements/build.txt
--r requirements/optional.txt
--r requirements/runtime.txt
--r requirements/tests.txt
+# Core PyTorch and CUDA
+torch>=1.12.0
+torchvision>=0.13.0
+torchaudio>=0.12.0
+
+# MMDetection3D dependencies
+mmcv>=2.0.0
+mmdet>=3.0.0
+mmengine>=0.7.0
+mmdet3d>=1.0.0
+
+# Computer Vision and Image Processing
+opencv-python>=4.5.0
+Pillow>=8.0.0
+imageio>=2.9.0
+
+# Scientific Computing
+numpy>=1.21.0
+scipy>=1.7.0
+scikit-learn>=1.0.0
+
+# Data Processing
+pandas>=1.3.0
+h5py>=3.1.0
+pyyaml>=5.4.0
+tqdm>=4.62.0
+
+# Visualization
+matplotlib>=3.5.0
+seaborn>=0.11.0
+plotly>=5.0.0
+
+# CLIP and Transformers
+transformers>=4.20.0
+ftfy>=6.0.0
+regex>=2021.8.0
+
+# Sparse Convolution (for BEVFusion)
+spconv-cu113>=2.1.21  # For CUDA 11.3
+# spconv-cu116>=2.1.21  # For CUDA 11.6
+# spconv-cu117>=2.1.21  # For CUDA 11.7
+
+# Point Cloud Processing
+open3d>=0.15.0
+plyfile>=0.7.0
+
+# Additional Utilities
+tensorboard>=2.8.0
+wandb>=0.12.0
+timm>=0.6.0
+einops>=0.4.0
+
+# Development and Testing
+pytest>=6.2.0
+black>=22.0.0
+flake8>=4.0.0
+isort>=5.10.0
+
+# Optional: For faster training
+ninja>=1.10.0
