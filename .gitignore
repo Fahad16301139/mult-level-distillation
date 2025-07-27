@@ -1,12 +1,8 @@
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
-
-# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -20,88 +16,20 @@ parts/
 sdist/
 var/
 wheels/
-pip-wheel-metadata/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 MANIFEST
 
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-target/
+# PyTorch
+*.pth
+*.pkl
+*.pt
 
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-.python-version
-
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
-
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
+# Environment
 .env
 .venv
 env/
@@ -109,92 +37,103 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-crd_env/
 
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# BEVFusion specific
-work_dirs/
-checkpoints/
-*.pth
-*.pkl
-*.png
-*.jpg
-*.jpeg
-*.gif
-*.svg
-*.pdf
-*.tex
-*.log
-*.txt
-*.json
-*.csv
-*.sh
-*.tar
-*.tgz
-*.zip
-*.gz
-
-# Data files
-data/
-nuscenes/
-*.tgz
-*.tar.gz
-
-# Temporary files
-*.tmp
-*.temp
-*.bak
-*.backup
-
-# IDE files
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS files
+# OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# Large files and directories
-debug_log_clip_1_july_20.txt
-comprehensive_distillation_verification.json
+# Logs
+*.log
+logs/
+log/
+
+# Data
+data/
+datasets/
+*.npy
+*.npz
+
+# Checkpoints and models
+checkpoints/
+work_dirs/
 *.pth
-stage2_*.pth
-infonce_distill_*.pth
-detection_model_*.pth
-final_*.pth
-best_*.pth
-*.pkl
+*.ckpt
+*.safetensors
 
-# Downloaded datasets
-nuscenes mini dataset.tgz
-CLIP-main/
-LightweightMOD4AV-Datakit-main/
-RepDistiller-master/
+# Results and outputs
+results/
+outputs/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.mp4
+*.avi
 
-# Build artifacts
-projects/BEVFusion/build/
-build/
-*.so
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
 
-# Backup files
-.gitignore.bak 
+# Documentation
+docs/
+*.md
+!README.md
+!DISTILLATION_README.md
+!DISTILLATION_TUTORIAL_STEP_BY_STEP.md
+!DOWNLOAD_INSTRUCTIONS.md
+!HOW_TO_RUN_MSE_DISTILLATION.md
+!README_CLIP_LOGGING.md
+!SIDE_BY_SIDE_CODE_COMPARISON.md
+
+# Redundant files to exclude
+.circleci/
+.dev_scripts/
+.github/
+demo/
+docker/
+requirements/
+resources/
+tests/
+visualization_results/
+.pre-commit-config-zh-cn.yaml
+.pre-commit-config.yaml
+.readthedocs.yml
+CITATION.cff
+MANIFEST.in
+README_zh-CN.md
+dataset-index.yml
+model-index.yml
+setup.cfg
+*.csv
+*.png
+*.yml
+*.yaml
+
+# Keep only essential distillation files
+!model_clip_with_bevfusion_infonce_distill_all.py
+!train_distillation.py
+!stage2_detection_finetuning_full_finetune.py
+!requirements.txt
+!setup.py
+!LICENSE
+!.gitignore
+
+# Keep essential directories
+!projects/BEVFusion/
+!configs/
+!mmdet3d/
+!tools/ 
