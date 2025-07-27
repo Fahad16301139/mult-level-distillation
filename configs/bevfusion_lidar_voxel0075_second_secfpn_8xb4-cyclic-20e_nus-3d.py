@@ -1,12 +1,6 @@
-
+# _base_ = ['../../../configs/_base_/default_runtime.py']  # Commented out - file doesn't exist
 custom_imports = dict(
     imports=['projects.BEVFusion.bevfusion'], allow_failed_imports=False)
-
-# Where to save new training outputs (from scratch)
-work_dir = 'work_dirs/bevfusion_lidar_voxel0075_second_secfpn_8xb4-cyclic-20e_nus-3d_from_scratch'
-
-# Remove load_from to start from scratch
-# load_from = 'work_dirs/bevfusion_lidar_voxel0075_second_secfpn_8xb4-cyclic-20e_nus-3d/epoch_20.pth'
 
 # model settings
 # Voxel size for voxel encoder
@@ -216,9 +210,9 @@ train_pipeline = [
     dict(type='ObjectSample', db_sampler=db_sampler),
     dict(
         type='GlobalRotScaleTrans',
-        scale_ratio_range=[0.95, 1.05], #keep objects closer to their original size
-        rot_range=[-0.39269908, 0.39269908], # from 45 to 22.5 degrees
-        translation_std=0.3), # translation standard deviation
+        scale_ratio_range=[0.9, 1.1],
+        rot_range=[-0.78539816, 0.78539816],
+        translation_std=0.5),
     dict(type='BEVFusionRandomFlip3D'),
     dict(type='PointsRangeFilter', point_cloud_range=point_cloud_range),
     dict(type='ObjectRangeFilter', point_cloud_range=point_cloud_range),
@@ -273,7 +267,7 @@ test_pipeline = [
 ]
 
 train_dataloader = dict(
-    batch_size=2,
+    batch_size=4,
     num_workers=4,
     persistent_workers=True,
     sampler=dict(type='DefaultSampler', shuffle=True),
@@ -312,7 +306,7 @@ val_dataloader = dict(
 test_dataloader = val_dataloader
 
 val_evaluator = dict(
-    type='NuScenesMetric', # This tells MMDetection3D to use the official NuScenes evaluation code nds, map etc.
+    type='NuScenesMetric',
     data_root=data_root,
     ann_file=data_root + 'nuscenes_infos_val.pkl',
     metric='bbox',
@@ -324,7 +318,7 @@ visualizer = dict(
     type='Det3DLocalVisualizer', vis_backends=vis_backends, name='visualizer')
 
 # learning rate
-lr = 0.000001
+lr = 0.0001
 param_scheduler = [
     # learning rate scheduler
     # During the first 8 epochs, learning rate increases from 0 to lr * 10
@@ -368,17 +362,14 @@ param_scheduler = [
 ]
 
 # runtime settings
-train_cfg = dict(
-    max_epochs=20,
-    type='EpochBasedTrainLoop',
-    val_interval=5)
+train_cfg = dict(by_epoch=True, max_epochs=20, val_interval=5)
 val_cfg = dict()
 test_cfg = dict()
 
 optim_wrapper = dict(
-    clip_grad=dict(max_norm=35, norm_type=2),
-    optimizer=dict(lr=0.00001, type='AdamW', weight_decay=0.01),
-    type='OptimWrapper')
+    type='OptimWrapper',
+    optimizer=dict(type='AdamW', lr=lr, weight_decay=0.01),
+    clip_grad=dict(max_norm=35, norm_type=2))
 
 # Default setting for scaling LR automatically
 #   - `enable` means enable scaling LR automatically
@@ -388,12 +379,6 @@ auto_scale_lr = dict(enable=False, base_batch_size=32)
 log_processor = dict(window_size=50)
 
 default_hooks = dict(
-    checkpoint=dict(interval=1, type='CheckpointHook'),
-    logger=dict(interval=50, type='LoggerHook'),
-    param_scheduler=dict(type='ParamSchedulerHook'),
-    sampler_seed=dict(type='DistSamplerSeedHook'),
-    timer=dict(type='IterTimerHook'),
-    visualization=dict(type='Det3DVisualizationHook'))
-custom_hooks = [
-    dict(disable_after_epoch=3, type='DisableObjectSampleHook'),
-]
+    logger=dict(type='LoggerHook', interval=50),
+    checkpoint=dict(type='CheckpointHook', interval=5))
+custom_hooks = [dict(type='DisableObjectSampleHook', disable_after_epoch=15)]

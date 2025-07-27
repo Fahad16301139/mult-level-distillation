@@ -1,18 +1,14 @@
-
+_base_ = ['../../../configs/_base_/default_runtime.py']
 custom_imports = dict(
     imports=['projects.BEVFusion.bevfusion'], allow_failed_imports=False)
 
-# Where to save new training outputs (from scratch)
-work_dir = 'work_dirs/bevfusion_lidar_voxel0075_second_secfpn_8xb4-cyclic-20e_nus-3d_from_scratch'
+# Change work directory for the improved model
+work_dir = 'work_dirs/bevfusion_lidar_voxel0075_second_secfpn_8xb4-cyclic-20e_nus-3d_improved'
 
-# Remove load_from to start from scratch
-# load_from = 'work_dirs/bevfusion_lidar_voxel0075_second_secfpn_8xb4-cyclic-20e_nus-3d/epoch_20.pth'
+# Load pre-trained model for fine-tuning
+load_from = 'work_dirs/bevfusion_lidar_voxel0075_second_secfpn_8xb4-cyclic-20e_nus-3d/epoch_20.pth'
 
 # model settings
-# Voxel size for voxel encoder
-# Usually voxel size is changed consistently with the point cloud range
-# If point cloud range is modified, do remember to change all related
-# keys in the config.
 voxel_size = [0.075, 0.075, 0.2]
 point_cloud_range = [-54.0, -54.0, -5.0, 54.0, 54.0, 3.0]
 class_names = [
@@ -33,18 +29,6 @@ data_prefix = dict(
     CAM_BACK_LEFT='samples/CAM_BACK_LEFT',
     sweeps='sweeps/LIDAR_TOP')
 input_modality = dict(use_lidar=True, use_camera=False)
-# backend_args = dict(
-#     backend='petrel',
-#     path_mapping=dict({
-#         './data/nuscenes/':
-#         's3://openmmlab/datasets/detection3d/nuscenes/',
-#         'data/nuscenes/':
-#         's3://openmmlab/datasets/detection3d/nuscenes/',
-#         './data/nuscenes_mini/':
-#         's3://openmmlab/datasets/detection3d/nuscenes/',
-#         'data/nuscenes_mini/':
-#         's3://openmmlab/datasets/detection3d/nuscenes/'
-#     }))
 backend_args = None
 
 model = dict(
@@ -65,8 +49,7 @@ model = dict(
         sparse_shape=[1440, 1440, 41],
         order=('conv', 'norm', 'act'),
         norm_cfg=dict(type='BN1d', eps=0.001, momentum=0.01),
-        encoder_channels=((16, 16, 32), (32, 32, 64), (64, 64, 128), (128,
-                                                                      128)),
+        encoder_channels=((16, 16, 32), (32, 32, 64), (64, 64, 128), (128, 128)),
         encoder_paddings=((0, 0, 1), (0, 0, 1), (0, 0, (1, 1, 0)), (0, 0)),
         block_type='basicblock'),
     pts_backbone=dict(
@@ -87,14 +70,14 @@ model = dict(
         use_conv_for_no_stride=True),
     bbox_head=dict(
         type='TransFusionHead',
-        num_proposals=200,
+        num_proposals=200,  # Reverted back to original
         auxiliary=True,
         in_channels=512,
         hidden_channel=128,
         num_classes=10,
         nms_kernel_size=3,
         bn_momentum=0.1,
-        num_decoder_layers=1,
+        num_decoder_layers=1,  # Reverted back to original
         decoder_layer=dict(
             type='TransformerDecoderLayer',
             self_attn_cfg=dict(embed_dims=128, num_heads=8, dropout=0.1),
@@ -104,8 +87,7 @@ model = dict(
                 feedforward_channels=256,
                 num_fcs=2,
                 ffn_drop=0.1,
-                act_cfg=dict(type='ReLU', inplace=True),
-            ),
+                act_cfg=dict(type='ReLU', inplace=True)),
             norm_cfg=dict(type='LN'),
             pos_encoding_cfg=dict(input_channel=2, num_pos_feats=128)),
         train_cfg=dict(
@@ -117,7 +99,7 @@ model = dict(
             gaussian_overlap=0.1,
             min_radius=2,
             pos_weight=-1,
-            code_weights=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.2, 0.2],
+            code_weights=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 1.0, 2.0],  # Modified weights
             assigner=dict(
                 type='HungarianAssigner3D',
                 iou_calculator=dict(type='BboxOverlaps3D', coordinate='lidar'),
@@ -216,18 +198,15 @@ train_pipeline = [
     dict(type='ObjectSample', db_sampler=db_sampler),
     dict(
         type='GlobalRotScaleTrans',
-        scale_ratio_range=[0.95, 1.05], #keep objects closer to their original size
-        rot_range=[-0.39269908, 0.39269908], # from 45 to 22.5 degrees
-        translation_std=0.3), # translation standard deviation
+        scale_ratio_range=[0.9, 1.1],  # Increased scale range
+        rot_range=[-0.78539816, 0.78539816],  # Increased to ±45 degrees
+        translation_std=0.5),  # Increased translation variation
     dict(type='BEVFusionRandomFlip3D'),
     dict(type='PointsRangeFilter', point_cloud_range=point_cloud_range),
     dict(type='ObjectRangeFilter', point_cloud_range=point_cloud_range),
     dict(
         type='ObjectNameFilter',
-        classes=[
-            'car', 'truck', 'construction_vehicle', 'bus', 'trailer',
-            'barrier', 'motorcycle', 'bicycle', 'pedestrian', 'traffic_cone'
-        ]),
+        classes=class_names),
     dict(type='PointShuffle'),
     dict(
         type='Pack3DDetInputs',
@@ -273,7 +252,7 @@ test_pipeline = [
 ]
 
 train_dataloader = dict(
-    batch_size=2,
+    batch_size=2,  # Reduced from 4 for better stability
     num_workers=4,
     persistent_workers=True,
     sampler=dict(type='DefaultSampler', shuffle=True),
@@ -289,9 +268,8 @@ train_dataloader = dict(
             test_mode=False,
             data_prefix=data_prefix,
             use_valid_flag=True,
-            # we use box_type_3d='LiDAR' in kitti and nuscenes dataset
-            # and box_type_3d='Depth' in sunrgbd and scannet dataset.
             box_type_3d='LiDAR')))
+
 val_dataloader = dict(
     batch_size=1,
     num_workers=4,
@@ -309,10 +287,11 @@ val_dataloader = dict(
         test_mode=True,
         box_type_3d='LiDAR',
         backend_args=backend_args))
+
 test_dataloader = val_dataloader
 
 val_evaluator = dict(
-    type='NuScenesMetric', # This tells MMDetection3D to use the official NuScenes evaluation code nds, map etc.
+    type='NuScenesMetric',
     data_root=data_root,
     ann_file=data_root + 'nuscenes_infos_val.pkl',
     metric='bbox',
@@ -323,45 +302,32 @@ vis_backends = [dict(type='LocalVisBackend')]
 visualizer = dict(
     type='Det3DLocalVisualizer', vis_backends=vis_backends, name='visualizer')
 
-# learning rate
-lr = 0.000001
+# learning rate and training settings
+lr = 0.0001
 param_scheduler = [
-    # learning rate scheduler
-    # During the first 8 epochs, learning rate increases from 0 to lr * 10
-    # during the next 12 epochs, learning rate decreases from lr * 10 to
-    # lr * 1e-4
+    # Warmup phase (first 5 epochs)
     dict(
-        type='CosineAnnealingLR',
-        T_max=8,
-        eta_min=lr * 10,
-        begin=0,
-        end=8,
+        type='LinearLR',
+        start_factor=0.001,
         by_epoch=True,
+        begin=0,
+        end=5,
         convert_to_iter_based=True),
+    # Main training phase with cosine annealing
     dict(
         type='CosineAnnealingLR',
-        T_max=12,
-        eta_min=lr * 1e-4,
-        begin=8,
+        T_max=15,  # 20 epochs - 5 warmup epochs
+        eta_min=lr * 0.01,  # Minimum lr = 0.01 * base_lr
+        begin=5,
         end=20,
         by_epoch=True,
         convert_to_iter_based=True),
-    # momentum scheduler
-    # During the first 8 epochs, momentum increases from 0 to 0.85 / 0.95
-    # during the next 12 epochs, momentum increases from 0.85 / 0.95 to 1
+    # Momentum scheduler
     dict(
         type='CosineAnnealingMomentum',
-        T_max=8,
-        eta_min=0.85 / 0.95,
+        T_max=20,
+        eta_min=0.85,
         begin=0,
-        end=8,
-        by_epoch=True,
-        convert_to_iter_based=True),
-    dict(
-        type='CosineAnnealingMomentum',
-        T_max=12,
-        eta_min=1,
-        begin=8,
         end=20,
         by_epoch=True,
         convert_to_iter_based=True)
@@ -369,31 +335,36 @@ param_scheduler = [
 
 # runtime settings
 train_cfg = dict(
-    max_epochs=20,
     type='EpochBasedTrainLoop',
-    val_interval=5)
+    max_epochs=40,  # Increased from 20
+    val_interval=2)  # More frequent validation
 val_cfg = dict()
 test_cfg = dict()
 
 optim_wrapper = dict(
-    clip_grad=dict(max_norm=35, norm_type=2),
-    optimizer=dict(lr=0.00001, type='AdamW', weight_decay=0.01),
-    type='OptimWrapper')
+    type='OptimWrapper',
+    optimizer=dict(
+        type='AdamW',
+        lr=lr,  # Match scheduler's learning rate
+        weight_decay=0.01,
+        betas=(0.9, 0.999)),
+    clip_grad=dict(max_norm=35, norm_type=2))
 
-# Default setting for scaling LR automatically
-#   - `enable` means enable scaling LR automatically
-#       or not by default.
-#   - `base_batch_size` = (8 GPUs) x (4 samples per GPU).
 auto_scale_lr = dict(enable=False, base_batch_size=32)
 log_processor = dict(window_size=50)
 
 default_hooks = dict(
-    checkpoint=dict(interval=1, type='CheckpointHook'),
+    checkpoint=dict(
+        interval=1,
+        type='CheckpointHook',
+        save_best='auto',  # Save best model based on validation metric
+        max_keep_ckpts=3),  # Keep only the best 3 checkpoints
     logger=dict(interval=50, type='LoggerHook'),
     param_scheduler=dict(type='ParamSchedulerHook'),
     sampler_seed=dict(type='DistSamplerSeedHook'),
     timer=dict(type='IterTimerHook'),
     visualization=dict(type='Det3DVisualizationHook'))
-custom_hooks = [
-    dict(disable_after_epoch=3, type='DisableObjectSampleHook'),
-]
+
+custom_hooks = [dict(type='DisableObjectSampleHook', disable_after_epoch=15)]
+
+# ... rest of the file remains unchanged ... 

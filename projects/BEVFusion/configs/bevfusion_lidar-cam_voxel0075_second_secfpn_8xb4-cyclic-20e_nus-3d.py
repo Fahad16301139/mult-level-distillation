@@ -189,32 +189,30 @@ param_scheduler = [
     dict(
         type='CosineAnnealingLR',
         begin=0,
-        T_max=6,
-        end=6,
+        T_max=20,
+        end=20,
         by_epoch=True,
         eta_min_ratio=1e-4,
         convert_to_iter_based=True),
     # momentum scheduler
-    # During the first 8 epochs, momentum increases from 1 to 0.85 / 0.95
-    # during the next 12 epochs, momentum increases from 0.85 / 0.95 to 1
     dict(
         type='CosineAnnealingMomentum',
         eta_min=0.85 / 0.95,
         begin=0,
-        end=2.4,
+        end=8,
         by_epoch=True,
         convert_to_iter_based=True),
     dict(
         type='CosineAnnealingMomentum',
         eta_min=1,
-        begin=2.4,
-        end=6,
+        begin=8,
+        end=20,
         by_epoch=True,
         convert_to_iter_based=True)
 ]
 
 # runtime settings
-train_cfg = dict(by_epoch=True, max_epochs=6, val_interval=1)
+train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=20, val_interval=1)
 val_cfg = dict()
 test_cfg = dict()
 

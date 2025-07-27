@@ -243,8 +243,7 @@ class BEVFusion(Base3DDetector):
         batch_input_metas,
         **kwargs,
     ):
-        print("BEVFusion extract_feat method called")
-        breakpoint()  # Breakpoint at feature extraction
+
         imgs = batch_inputs_dict.get('imgs', None)
         points = batch_inputs_dict.get('points', None)
         features = []
@@ -289,7 +288,6 @@ class BEVFusion(Base3DDetector):
              batch_data_samples: List[Det3DDataSample],
              **kwargs) -> List[Det3DDataSample]:
         print("BEVFusion loss method called")
-        breakpoint()  # Breakpoint at loss calculation
         batch_input_metas = [item.metainfo for item in batch_data_samples]
         feats = self.extract_feat(batch_inputs_dict, batch_input_metas)
 

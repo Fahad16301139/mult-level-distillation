@@ -461,9 +461,8 @@ class TransFusionHead(nn.Module):
                                     boxes_for_nms,
                                     top_scores,
                                     thresh=task['radius'],
-                                    pre_maxsize=self.test_cfg['pre_maxsize'],
-                                    post_max_size=self.
-                                    test_cfg['post_maxsize'],
+                                    pre_max_size=self.test_cfg['pre_maxsize'],
+                                    post_max_size=self.test_cfg['post_maxsize'],
                                 )
                         else:
                             task_keep_indices = torch.arange(task_mask.sum())
@@ -477,8 +476,34 @@ class TransFusionHead(nn.Module):
                         scores=scores[keep_mask],
                         labels=labels[keep_mask],
                     )
+                    
+                    # Filter out predictions with invalid labels (outside 0-9 range for nuScenes)
+                    if len(ret['labels']) > 0:
+                        valid_mask = (ret['labels'] >= 0) & (ret['labels'] < 10) & (ret['scores'] > 0.01)
+                        ret['bboxes'] = ret['bboxes'][valid_mask]
+                        ret['scores'] = ret['scores'][valid_mask]
+                        ret['labels'] = ret['labels'][valid_mask]
                 else:  # no nms
                     ret = dict(bboxes=boxes3d, scores=scores, labels=labels)
+
+                # Filter out predictions with invalid labels (outside 0-9 range for nuScenes)
+                if len(ret['labels']) > 0:
+                    valid_mask = (ret['labels'] >= 0) & (ret['labels'] < 10) & (ret['scores'] > 0.01)
+                    ret['bboxes'] = ret['bboxes'][valid_mask]
+                    ret['scores'] = ret['scores'][valid_mask]
+                    ret['labels'] = ret['labels'][valid_mask]
+                
+                # Ensure we always have at least one prediction per sample for nuScenes evaluation compatibility
+                # If all predictions were filtered out, add a dummy prediction with very low score
+                if len(ret['labels']) == 0:
+                    # Create a dummy prediction at origin with very low score
+                    device = boxes3d.device
+                    dummy_bbox = torch.zeros((1, boxes3d.shape[-1]), device=device)
+                    dummy_score = torch.tensor([0.001], device=device)  # Very low score
+                    dummy_label = torch.tensor([0], device=device)  # Car class
+                    ret['bboxes'] = dummy_bbox
+                    ret['scores'] = dummy_score
+                    ret['labels'] = dummy_label
 
                 temp_instances = InstanceData()
                 temp_instances.bboxes_3d = metas[0]['box_type_3d'](

@@ -131,8 +131,6 @@ def main():
     # build the runner from config
     if 'runner_type' not in cfg:
         # build the default runner
-        print("About to create the runner")
-        breakpoint()  # Breakpoint before runner is created
         runner = Runner.from_cfg(cfg)
     else:
         # build customized runner from the registry
@@ -140,11 +138,8 @@ def main():
         runner = RUNNERS.build(cfg)
 
     # start training
-    print("About to start training")
-    breakpoint()  # Breakpoint before training starts
     runner.train()
 
 
 if __name__ == '__main__':
-    breakpoint()  # Breakpoint at the very beginning
     main()

@@ -200,7 +200,6 @@ class NuScenesDataset(Det3DDataset):
             info (dict): Raw info dict.
         """
         print("NuScenes parse_data_info called")
-        breakpoint()  # Breakpoint for inspecting data loading
         if self.load_type == 'mv_image_based':
             data_list = []
             if self.modality['use_lidar']:
